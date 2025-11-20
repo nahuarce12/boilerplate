@@ -4,9 +4,18 @@ import type {
   PolarSubscription,
   PolarProduct,
   PolarPrice,
+  PolarOrder,
 } from './types'
 
-const POLAR_API_URL = 'https://api.polar.sh/v1'
+const POLAR_API_URL = process.env.POLAR_API_URL || 'https://api.polar.sh/v1'
+
+interface PolarListResponse<T> {
+  items: T[]
+  pagination: {
+    total_count: number
+    max_page_size: number
+  }
+}
 
 /**
  * Polar API Client
@@ -17,8 +26,25 @@ export class PolarClient {
   private organizationId: string
 
   constructor() {
-    this.apiKey = getEnvVar('POLAR_API_KEY')
-    this.organizationId = getEnvVar('NEXT_PUBLIC_POLAR_ORGANIZATION_ID')
+    // Use environment variables directly without getEnvVar wrapper
+    const token = process.env.POLAR_ACCESS_TOKEN
+    const orgId = process.env.NEXT_PUBLIC_POLAR_ORGANIZATION_ID
+    
+    if (!token) {
+      throw new Error(
+        `POLAR_ACCESS_TOKEN is not set. Current value: "${token}". ` +
+        `Check your .env.local file. Available POLAR vars: ${Object.keys(process.env)
+          .filter(k => k.includes('POLAR'))
+          .join(', ')}`
+      )
+    }
+    
+    if (!orgId) {
+      throw new Error('NEXT_PUBLIC_POLAR_ORGANIZATION_ID is not set')
+    }
+    
+    this.apiKey = token
+    this.organizationId = orgId
   }
 
   private async fetch<T>(
@@ -48,9 +74,10 @@ export class PolarClient {
    * Get all products for the organization
    */
   async getProducts(): Promise<PolarProduct[]> {
-    return this.fetch<PolarProduct[]>(
+    const response = await this.fetch<PolarListResponse<PolarProduct>>(
       `/organizations/${this.organizationId}/products`
     )
+    return response.items
   }
 
   /**
@@ -64,7 +91,8 @@ export class PolarClient {
    * Get all prices for a product
    */
   async getPricesForProduct(productId: string): Promise<PolarPrice[]> {
-    return this.fetch<PolarPrice[]>(`/products/${productId}/prices`)
+    const response = await this.fetch<PolarListResponse<PolarPrice>>(`/products/${productId}/prices`)
+    return response.items
   }
 
   /**
@@ -75,6 +103,7 @@ export class PolarClient {
     priceId: string
     customerEmail?: string
     successUrl: string
+    cancelUrl?: string
     metadata?: Record<string, string>
   }): Promise<PolarCheckoutSession> {
     return this.fetch<PolarCheckoutSession>('/checkouts', {
@@ -84,9 +113,17 @@ export class PolarClient {
         price_id: params.priceId,
         customer_email: params.customerEmail,
         success_url: params.successUrl,
+        cancel_url: params.cancelUrl,
         metadata: params.metadata,
       }),
     })
+  }
+
+  /**
+   * Get a checkout session by ID
+   */
+  async getCheckout(checkoutId: string): Promise<PolarCheckoutSession> {
+    return this.fetch<PolarCheckoutSession>(`/checkouts/${checkoutId}`)
   }
 
   /**
@@ -130,9 +167,39 @@ export class PolarClient {
   async getCustomerSubscriptions(
     customerEmail: string
   ): Promise<PolarSubscription[]> {
-    return this.fetch<PolarSubscription[]>(
+    const response = await this.fetch<PolarListResponse<PolarSubscription>>(
       `/subscriptions?customer_email=${encodeURIComponent(customerEmail)}`
     )
+    return response.items
+  }
+
+  /**
+   * List orders with optional filters
+   */
+  async listOrders(params?: {
+    customerId?: string
+    limit?: number
+  }): Promise<PolarOrder[]> {
+    const searchParams = new URLSearchParams()
+    if (params?.customerId) {
+      searchParams.append('customer_id', params.customerId)
+    }
+    if (params?.limit) {
+      searchParams.append('limit', params.limit.toString())
+    }
+
+    const query = searchParams.toString()
+    const endpoint = query ? `/orders?${query}` : '/orders'
+    
+    const response = await this.fetch<PolarListResponse<PolarOrder>>(endpoint)
+    return response.items
+  }
+
+  /**
+   * Get a specific order by ID
+   */
+  async getOrder(orderId: string): Promise<PolarOrder> {
+    return this.fetch<PolarOrder>(`/orders/${orderId}`)
   }
 }
 

@@ -3,6 +3,8 @@ import { DashboardShell } from "@/components/dashboard/DashboardShell"
 import { getUserSubscription } from "@/app/actions/subscriptions"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Icons } from "@/components/icons"
+import { BillingForm } from "@/components/dashboard/BillingForm"
+import { BillingToast } from "@/components/dashboard/BillingToast"
 
 export const metadata = {
   title: "Billing",
@@ -10,10 +12,12 @@ export const metadata = {
 }
 
 export default async function BillingPage() {
-  const subscription = await getUserSubscription()
+  const result = await getUserSubscription()
+  const subscription = result.success ? result.data : null
 
   return (
     <DashboardShell>
+      <BillingToast />
       <DashboardHeader
         heading="Billing"
         text="Manage billing and your subscription plan."
@@ -26,7 +30,7 @@ export default async function BillingPage() {
             Polar payments are connected in test mode.
           </AlertDescription>
         </Alert>
-        {/* Add subscription details here */}
+        <BillingForm subscription={subscription} />
       </div>
     </DashboardShell>
   )

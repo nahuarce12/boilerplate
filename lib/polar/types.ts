@@ -10,20 +10,48 @@ export interface PolarCustomer {
 export interface PolarProduct {
   id: string
   name: string
-  description?: string
-  is_recurring: boolean
+  description: string | null
   is_archived: boolean
-  organization_id: string
+  is_highlighted: boolean
   prices: PolarPrice[]
+  benefits: PolarBenefit[]
+  medias: PolarMedia[]
 }
 
 export interface PolarPrice {
   id: string
-  amount_type: 'fixed' | 'custom'
-  price_amount: number // in cents
+  type: 'recurring' | 'one_time'
+  recurring_interval: 'month' | 'year' | null
+  price_amount: number
   price_currency: string
-  recurring_interval?: 'month' | 'year'
+  is_archived: boolean
+}
+
+export interface PolarBenefit {
+  id: string
+  description: string
+  type: string
+}
+
+export interface PolarMedia {
+  id: string
+  public_url: string
+  organization_id: string
+}
+
+export interface PolarCheckoutSession {
+  id: string
+  url: string
+  customer_email?: string
+  customer_name?: string
   product_id: string
+  price_id: string
+  success_url: string
+  cancel_url?: string
+  amount: number | null
+  currency: string | null
+  status: 'open' | 'expired' | 'completed'
+  metadata?: Record<string, string>
 }
 
 export interface PolarSubscription {
@@ -49,15 +77,16 @@ export interface PolarSubscription {
   metadata?: Record<string, string>
 }
 
-export interface PolarCheckoutSession {
+export interface PolarOrder {
   id: string
-  url: string
-  customer_email?: string
-  customer_name?: string
+  customer_id: string
   product_id: string
   price_id: string
-  success_url: string
-  cancel_url?: string
+  subscription_id?: string
+  amount: number
+  currency: string
+  status: 'pending' | 'processing' | 'succeeded' | 'failed' | 'canceled'
+  created_at: string
   metadata?: Record<string, string>
 }
 

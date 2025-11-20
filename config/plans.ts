@@ -5,108 +5,74 @@
 
 export type PricingInterval = 'month' | 'year'
 
-export interface PricingFeature {
-  name: string
-  included: boolean
-}
-
 export interface PricingPlan {
   id: string
+  polar_product_id: string
   name: string
   description: string
-  priceMonthly: number // in cents
-  priceYearly: number // in cents
+  price: number // in dollars
   interval: PricingInterval
-  features: PricingFeature[]
+  features: string[]
   popular?: boolean
   recommended?: boolean
-  cta: string
-  polarProductIdMonthly?: string
-  polarProductIdYearly?: string
 }
 
 export const pricingPlans: PricingPlan[] = [
   {
-    id: 'starter',
-    name: 'Starter',
-    description: 'Perfect for individuals and small projects',
-    priceMonthly: 999, // $9.99
-    priceYearly: 9588, // $95.88 (save 20%)
+    id: '00000000-0000-0000-0000-000000000001',
+    polar_product_id: '51229394-aca6-4f39-94f4-4f2ecb5c7d96',
+    name: 'Basic',
+    description: 'Perfect for individuals getting started',
+    price: 5.00,
     interval: 'month',
     features: [
-      { name: 'Basic Features', included: true },
-      { name: 'Up to 1,000 API calls/month', included: true },
-      { name: '1 GB Storage', included: true },
-      { name: 'Email Support', included: true },
-      { name: 'Community Access', included: true },
-      { name: 'Advanced Analytics', included: false },
-      { name: 'Priority Support', included: false },
-      { name: 'Custom Integrations', included: false },
+      'Basic Features',
+      'Up to 1,000 API calls/month',
+      '1 GB Storage',
+      'Email Support',
+      'Community Access',
     ],
-    popular: false,
     recommended: false,
-    cta: 'Get Started',
-    polarProductIdMonthly: 'prod_starter_monthly',
-    polarProductIdYearly: 'prod_starter_yearly',
+    popular: false,
   },
   {
-    id: 'pro',
+    id: '00000000-0000-0000-0000-000000000002',
+    polar_product_id: 'e9b637a7-84f6-4611-bdc7-80c70eec3420',
     name: 'Pro',
-    description: 'Ideal for growing businesses and teams',
-    priceMonthly: 2999, // $29.99
-    priceYearly: 28788, // $287.88 (save 20%)
+    description: 'Ideal for professionals and small teams',
+    price: 9.90,
     interval: 'month',
     features: [
-      { name: 'All Starter Features', included: true },
-      { name: 'Up to 10,000 API calls/month', included: true },
-      { name: '10 GB Storage', included: true },
-      { name: 'Priority Email Support', included: true },
-      { name: 'Advanced Analytics', included: true },
-      { name: 'Custom Integrations', included: true },
-      { name: 'Team Collaboration (up to 5 users)', included: true },
-      { name: 'Unlimited Team Members', included: false },
+      'All Basic Features',
+      'Up to 10,000 API calls/month',
+      '10 GB Storage',
+      'Priority Support',
+      'Advanced Analytics',
+      'Custom Integrations',
     ],
     popular: true,
     recommended: true,
-    cta: 'Start Free Trial',
-    polarProductIdMonthly: 'prod_pro_monthly',
-    polarProductIdYearly: 'prod_pro_yearly',
   },
   {
-    id: 'enterprise',
-    name: 'Enterprise',
-    description: 'For large organizations with custom needs',
-    priceMonthly: 9999, // $99.99
-    priceYearly: 95988, // $959.88 (save 20%)
+    id: '00000000-0000-0000-0000-000000000003',
+    polar_product_id: 'df52cedf-399e-46da-ab95-e50d2aa2150c',
+    name: 'Max',
+    description: 'For power users and growing teams',
+    price: 15.00,
     interval: 'month',
     features: [
-      { name: 'All Pro Features', included: true },
-      { name: 'Unlimited API calls', included: true },
-      { name: '100 GB Storage', included: true },
-      { name: '24/7 Phone & Email Support', included: true },
-      { name: 'Advanced Security & Compliance', included: true },
-      { name: 'Custom Integrations & Workflows', included: true },
-      { name: 'Unlimited Team Members', included: true },
-      { name: 'Dedicated Account Manager', included: true },
-      { name: 'SLA Guarantee (99.9% uptime)', included: true },
-      { name: 'Custom Onboarding & Training', included: true },
+      'All Pro Features',
+      'Unlimited API calls',
+      '50 GB Storage',
+      '24/7 Priority Support',
+      'Advanced Security',
+      'Team Collaboration (up to 10 users)',
+      'Custom Workflows',
     ],
     popular: false,
     recommended: false,
-    cta: 'Contact Sales',
-    polarProductIdMonthly: 'prod_enterprise_monthly',
-    polarProductIdYearly: 'prod_enterprise_yearly',
   },
 ]
-
-/**
- * Calculate yearly savings percentage
- */
-export function calculateYearlySavings(plan: PricingPlan): number {
-  const monthlyAnnual = plan.priceMonthly * 12
-  const savings = monthlyAnnual - plan.priceYearly
-  return Math.round((savings / monthlyAnnual) * 100)
-}
 
 /**
  * Get plan by ID
@@ -122,8 +88,13 @@ export function getPlanByPolarProductId(
   polarProductId: string
 ): PricingPlan | undefined {
   return pricingPlans.find(
-    (plan) =>
-      plan.polarProductIdMonthly === polarProductId ||
-      plan.polarProductIdYearly === polarProductId
+    (plan) => plan.polar_product_id === polarProductId
   )
+}
+
+/**
+ * Get recommended plan
+ */
+export function getRecommendedPlan(): PricingPlan | undefined {
+  return pricingPlans.find((plan) => plan.recommended)
 }
